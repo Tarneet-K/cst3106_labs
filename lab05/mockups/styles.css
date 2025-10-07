@@ -1,0 +1,44 @@
+body {
+  font-family: Inter, sans-serif;
+  background: #FAFAFA;
+  color: #1F2937;
+  margin: 20px;
+}
+
+h1 {
+  font-family: 'Lilita One', cursive;
+  color: #4F46E5;
+}
+
+.layout {
+  display: flex;
+  gap: 40px;
+}
+
+.dice {
+  display: flex;
+  gap: 10px;
+}
+
+.die {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  border: 2px solid #E5E7EB;
+  background: white;
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+}
+
+button {
+  background: #4F46E5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  margin-top: 20px;
+  cursor: pointer;
+}
