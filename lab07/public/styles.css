@@ -1,0 +1,94 @@
+:root{
+  --border:#59606b;
+  --pip:#2f3440;
+}
+
+*{ box-sizing: border-box; }
+
+body{
+  font-family: system-ui, Arial, sans-serif;
+  margin: 32px;
+  color: #222;
+}
+
+h1{
+  font-size: 44px;
+  font-weight: 800;
+  margin: 0 0 20px;
+}
+
+#rollBtn{
+  padding: 8px 16px;
+  border: 1px solid #bbb;
+  background: #f3f3f3;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.dice-row{
+  display: flex;
+  gap: 24px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+/* DIE */
+.die{
+  width: 120px;
+  height: 120px;
+  border: 8px solid var(--border);
+  border-radius: 16px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 12px;
+  padding: 12px;
+}
+
+.pip{
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--pip);
+  opacity: 0;                 /* hidden by default */
+}
+
+/* grid positions (p1..p9) */
+.p1{ grid-area: 1 / 1 }
+.p2{ grid-area: 1 / 2 }
+.p3{ grid-area: 1 / 3 }
+.p4{ grid-area: 2 / 1 }
+.p5{ grid-area: 2 / 2 }
+.p6{ grid-area: 2 / 3 }
+.p7{ grid-area: 3 / 1 }
+.p8{ grid-area: 3 / 2 }
+.p9{ grid-area: 3 / 3 }
+
+/* show pips for each face */
+.die[data-value="1"] .p5 { opacity: 1; }
+
+.die[data-value="2"] .p1,
+.die[data-value="2"] .p9 { opacity: 1; }
+
+.die[data-value="3"] .p1,
+.die[data-value="3"] .p5,
+.die[data-value="3"] .p9 { opacity: 1; }
+
+.die[data-value="4"] .p1,
+.die[data-value="4"] .p3,
+.die[data-value="4"] .p7,
+.die[data-value="4"] .p9 { opacity: 1; }
+
+.die[data-value="5"] .p1,
+.die[data-value="5"] .p3,
+.die[data-value="5"] .p5,
+.die[data-value="5"] .p7,
+.die[data-value="5"] .p9 { opacity: 1; }
+
+.die[data-value="6"] .p1,
+.die[data-value="6"] .p3,
+.die[data-value="6"] .p4,
+.die[data-value="6"] .p6,
+.die[data-value="6"] .p7,
+.die[data-value="6"] .p9 { opacity: 1; }
