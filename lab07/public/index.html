@@ -1,18 +1,67 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Lab 07 — Dice Module</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Lab 07 – Dice Module</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 0; padding: 24px; }
+    .wrap { max-width: 720px; margin: 0 auto; text-align: center; }
+    h1 { margin: 0 0 12px; font-size: 20px; }
+    #roll-button {
+      padding: 10px 16px; border-radius: 10px; border: 1px solid #bbb; cursor: pointer; background: #f6f6f6;
+    }
+    #dice-container {
+      display: flex; gap: 12px; justify-content: center; margin-top: 20px; flex-wrap: wrap;
+    }
+    .die {
+      width: 100px; height: 100px; border: 1px solid #ddd; border-radius: 12px;
+      background-image: url('dice1.jpg');
+      background-size: 600% 100%;
+      background-position: 0 0;
+    }
+  </style>
 </head>
 <body>
-  <h1>Lab 07 — Dice Module</h1>
+  <div class="wrap">
+    <h1>Lab 07 – Dice Module</h1>
+    <button id="roll-button">Roll Dice</button>
 
-  <button id="rollBtn">Roll Dice</button>
+    <div id="dice-container" aria-label="Dice">
+      <div class="die" data-index="0" aria-label="die 1"></div>
+      <div class="die" data-index="1" aria-label="die 2"></div>
+      <div class="die" data-index="2" aria-label="die 3"></div>
+      <div class="die" data-index="3" aria-label="die 4"></div>
+      <div class="die" data-index="4" aria-label="die 5"></div>
+    </div>
+  </div>
 
-  <div id="diceRow" class="dice-row"><!-- dice get inserted here --></div>
+  <script>
+    const rollButton = document.getElementById('roll-button');
 
-  <script src="app.js"></script>
+    document.querySelectorAll('.die').forEach((die, i) => {
+      die.style.backgroundPosition = `${-100 * i}% 0`;
+    });
+
+    rollButton.addEventListener('click', async () => {
+      rollButton.disabled = true;
+      try {
+        const res = await fetch('/roll-dices');
+        const { values } = await res.json();
+
+        const dice = document.querySelectorAll('.die');
+        dice.forEach((die, i) => {
+          const v = values[i] ?? 1;
+          die.style.backgroundPosition = `${-100 * (v - 1)}% 0`;
+          die.setAttribute('aria-label', `die ${i+1} shows ${v}`);
+        });
+      } catch (err) {
+        console.error('Error:', err);
+        alert('Server error. Make sure server is running.');
+      } finally {
+        rollButton.disabled = false;
+      }
+    });
+  </script>
 </body>
 </html>
