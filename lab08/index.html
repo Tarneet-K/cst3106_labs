@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lab 08 — jQuery Dice Roller</title>
+  <!-- jQuery CDN (choose either one in your submission notes) -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  
+  <style>
+    /* ====== Base layout ====== */
+    :root {
+      --die-size: 140px;
+      --pip-size: 18px;
+      --accent: #111827; /* slate-900 */
+      --bg: #f8fafc;     /* slate-50 */
+    }
+
+    html, body {
+      height: 100%;
+    }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      margin: 0;
+      background: var(--bg);
+      color: #111;
+      display: grid;
+      place-items: center;
+    }
+
+    .wrap {
+      width: min(680px, 92vw);
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(2, 6, 23, 0.12);
+      padding: 28px 24px 22px;
+    }
+
+    h1 { font-size: 1.25rem; margin: 0 0 8px; }
+    p  { margin: 0 0 16px; color: #334155; }
+
+    /* ====== Dice ====== */
+    .dice {
+      width: var(--die-size);
+      height: var(--die-size);
+      background: #fff;
+      border-radius: 18px;
+      border: 2px solid #e5e7eb;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 0;
+      place-items: center;
+      margin: 14px auto 10px;
+      box-shadow: 0 8px 20px rgba(2,6,23,0.10);
+      transition: transform 180ms ease;
+    }
+
+    .dice.rolling {
+      animation: roll 0.9s ease-in-out both;
+      /* small visual hint while rolling */
+      filter: drop-shadow(0 16px 24px rgba(2,6,23,0.18));
+    }
+
+    @keyframes roll {
+      0%   { transform: rotate(0) scale(1); }
+      30%  { transform: rotate(120deg) scale(0.96); }
+      60%  { transform: rotate(225deg) scale(1.03); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+
+    .pip {
+      width: var(--pip-size);
+      height: var(--pip-size);
+      background: var(--accent);
+      border-radius: 50%;
+      opacity: 0; /* hidden by default, we toggle visible ones in JS */
+      transform: scale(0.7);
+      transition: opacity 140ms ease, transform 140ms ease;
+    }
+
+    .pip.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Grid positions for the 7 pip anchors */
+    .p1 { grid-column: 2; grid-row: 2; } /* center */
+    .p2 { grid-column: 1; grid-row: 1; } /* top-left */
+    .p3 { grid-column: 3; grid-row: 1; } /* top-right */
+    .p4 { grid-column: 1; grid-row: 2; } /* middle-left */
+    .p5 { grid-column: 3; grid-row: 2; } /* middle-right */
+    .p6 { grid-column: 1; grid-row: 3; } /* bottom-left */
+    .p7 { grid-column: 3; grid-row: 3; } /* bottom-right */
+
+    /* ====== Controls ====== */
+    .controls { display: flex; align-items: center; gap: 12px; justify-content: center; }
+
+    button#rollBtn {
+      appearance: none;
+      border: 0; border-radius: 999px;
+      background: #111827; color: white;
+      padding: 10px 16px;
+      font-size: 15px; font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(2,6,23,0.22);
+      transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+    }
+    button#rollBtn:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(2,6,23,0.26); }
+    button#rollBtn:active { transform: translateY(0); box-shadow: 0 6px 16px rgba(2,6,23,0.22); }
+    button#rollBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .readout { font-variant-numeric: tabular-nums; color: #0f172a; min-width: 6ch; text-align: center; }
+    .muted   { color: #64748b; font-size: 0.9rem; text-align: center; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Lab 08 — Dice Rolling (jQuery)</h1>
+    
+
+    <!-- Live region helps screen readers announce result after each roll -->
+    <div id="live" aria-live="polite" class="sr-only" style="position:absolute;left:-9999px;">Starting at 6</div>
+
+    <!-- The die has 7 pip anchors; JS toggles which ones are visible per value. -->
+    <div class="dice" id="die" role="img" aria-label="Die showing 6">
+      <div class="pip p1"></div>
+      <div class="pip p2"></div>
+      <div class="pip p3"></div>
+      <div class="pip p4"></div>
+      <div class="pip p5"></div>
+      <div class="pip p6"></div>
+      <div class="pip p7"></div>
+    </div>
+
+    <div class="controls">
+      <button id="rollBtn" type="button">Roll the die</button>
+      <div class="readout"><strong>Result:</strong> <span id="result">6</span></div>
+    </div>
+
+    
+  </div>
+
+  <script>
+    // ====== jQuery-powered Dice Roller ======
+    // Mapping of die face to which pip anchors should be visible
+    const FACE_PIPS = {
+      1: [".p1"],
+      2: [".p2", ".p7"],
+      3: [".p2", ".p1", ".p7"],
+      4: [".p2", ".p3", ".p6", ".p7"],
+      5: [".p2", ".p3", ".p6", ".p7", ".p1"],
+      6: [".p2", ".p3", ".p4", ".p5", ".p6", ".p7"],
+    };
+
+    // Utility: set the die to a specific value (1..6)
+    function setDie(value) {
+      const $die = $("#die");
+      const $pips = $die.find(".pip");
+      // Hide all
+      $pips.removeClass("show");
+      // Show only the pips for this face
+      FACE_PIPS[value].forEach(sel => $die.find(sel).addClass("show"));
+      // Update accessible label + visual readout
+      $die.attr("aria-label", `Die showing ${value}`);
+      $("#result").text(value);
+      $("#live").text(`Result ${value}`);
+    }
+
+    // Random int in [min, max]
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // Ensure the die starts on 6 (per spec)
+    $(function() { setDie(6); });
+
+    // Click handler: animate, flicker faces, then settle on a final random value
+    let flickerTimer = null;
+
+    $("#rollBtn").on("click", function () {
+      const $die = $("#die");
+      const $btn = $(this);
+
+      if ($die.hasClass("rolling")) return; // ignore spams while animating
+
+      $btn.prop("disabled", true);
+      $die.addClass("rolling");
+
+      // During animation, quickly cycle through faces to feel more dynamic
+      flickerTimer = setInterval(() => setDie(randInt(1, 6)), 100);
+
+      // End the animation after 900ms, choose a final result, and clean up
+      setTimeout(() => {
+        clearInterval(flickerTimer);
+        const final = randInt(1, 6);
+        setDie(final);
+        $die.removeClass("rolling");
+        $btn.prop("disabled", false);
+      }, 900);
+    });
+  </script>
+</body>
+</html>
